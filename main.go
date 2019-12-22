@@ -1,11 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"github.com/AliBedaer/go-orm/database"
-	orm "github.com/AliBedaer/go-orm/database"
 )
 
 func main() {
-	db := database.Orm.Init()
-	con := orm.Orm.Init(5432, "localhost", "postgres", "password", "main_system", "postgres")
+	orm := database.Orm{}
+
+	orm.Init(5432, "localhost", "postgres", "password", "main_system", "postgres")
+
+	fmt.Println(orm.Port)
+
+	orm.Connect()
+	q := orm.Select("name, age,id", "users").Where("asd", "=", "asd")
+
+	fmt.Println(q)
+
+	fmt.Println(orm.Query)
+
+	orm.Execute()
 }
