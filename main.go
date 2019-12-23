@@ -2,22 +2,54 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+
 	"github.com/AliBedaer/go-orm/database"
+	"github.com/joho/godotenv"
 )
+
+type user struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 
 func main() {
 	orm := database.Orm{}
 
-	orm.Init(5432, "localhost", "postgres", "password", "main_system", "postgres")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
-	fmt.Println(orm.Port)
+	port, _ := strconv.ParseInt(os.Getenv("DATABASE_PORT"), 10, 64)
 
-	orm.Connect()
-	q := orm.Select("name, age,id", "users").Where("asd", "=", "asd")
+	orm.Init(port, os.Getenv("DATABASE_HOST"), os.Getenv("DATABASE_USER"), os.Getenv("DATABASE_PASSWORD"), os.Getenv("DATABASE_NAME"), os.Getenv("DATABASE_TYPE"))
 
-	fmt.Println(q)
+	db := orm.Connect()
 
-	fmt.Println(orm.Query)
+	orm.Select("*", "users")
+
+	rows, err := db.Query(orm.Query)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	users := make([]user, 0)
+	var user user
+	for rows.Next() {
+		err = rows.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+		users = append(users, user)
+		if err != nil {
+			panic(err.Error())
+		}
+	}
+
+	fmt.Println(users)
 
 	orm.Execute()
+	defer db.Close()
 }
